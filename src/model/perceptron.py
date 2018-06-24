@@ -51,7 +51,6 @@ class Perceptron(Classifier):
         # add bias weights at the beginning with the same random initialize
         self.weight = np.insert(self.weight, 0, np.random.rand()/10)
 
-        
     def train(self, verbose=True):
         """Train the perceptron with the perceptron learning algorithm.
 
@@ -80,10 +79,10 @@ class Perceptron(Classifier):
                     totalError += error
 
             iteration += 1
-            
+
             if verbose:
                 logging.info("Epoch: %i; Error: %i", iteration, -totalError)
-            
+
             if totalError == 0 or iteration >= self.epochs:
                 # stop criteria is reached
                 learned = True
@@ -127,5 +126,3 @@ class Perceptron(Classifier):
     def fire(self, input):
         """Fire the output of the perceptron corresponding to the input """
         return Activation.sign(np.dot(np.array(input), self.weight))
-        
-        

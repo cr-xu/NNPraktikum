@@ -8,7 +8,9 @@ from numpy import exp
 from numpy import divide
 from numpy import ones
 from numpy import asarray
-
+from numpy import diag
+from numpy import dot
+from numpy import sum
 
 class Activation:
     """
@@ -64,13 +66,15 @@ class Activation:
     @staticmethod
     def softmax(netOutput):
         # Here you have to code the softmax function
-        return np.exp(netOutput)/np.sum(np.exp(netOutput))
+        return exp(netOutput)/sum(exp(netOutput))
 
     @staticmethod
     def softmaxPrime(netOutput):
         # Here you have to code the softmax function
-        s = Activation.softmax(netOutput)
-        return s * (1 - s)
+        # softmax prime[i,j] = (delta_ij-y_i) * y_j
+        s = Activation.softmax(netOutput).reshape((-1,1))
+        jacobian = diag(s) - dot(s, s.T)
+        return jacobian
 
     @staticmethod
     def getActivation(str):
