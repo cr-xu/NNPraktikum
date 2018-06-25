@@ -8,14 +8,12 @@ from util.activation_functions import Activation
 class LogisticLayer():
     """
     A layer of neural
-
     Parameters
     ----------
     nIn: int: number of units from the previous layer (or input data)
     nOut: int: number of units of the current layer (or output)
     activation: string: activation function of every units in the layer
     isClassifierLayer: bool:  to do classification or regression
-
     Attributes
     ----------
     nIn : positive int:
@@ -72,12 +70,10 @@ class LogisticLayer():
     def forward(self, inp):
         """
         Compute forward step over the input using its weights
-
         Parameters
         ----------
         inp : ndarray
             a numpy array (nIn + 1,1) containing the input of the layer
-
         Change outp
         -------
         outp: ndarray
@@ -94,14 +90,12 @@ class LogisticLayer():
     def computeDerivative(self, next_derivatives, next_weights):
         """
         Compute the derivatives (backward)
-
         Parameters
         ----------
         next_derivatives: ndarray
             a numpy array containing the derivatives from next layer
         next_weights : ndarray
             a numpy array containing the weights from next layer
-
         Change deltas
         -------
         deltas: ndarray
@@ -125,16 +119,19 @@ class LogisticLayer():
         # Or even more general: doesn't care which activation function is used
         # dado: derivative of activation function w.r.t the output
         dado = self.activationDerivative(self.outp)
-        self.deltas = dado * np.dot(next_derivatives, next_weights)
+        self.deltas = (dado * np.dot(next_derivatives, next_weights))
 
         # Or you can explicitly calculate the derivatives for two cases
         # Page 40 Back-propagation slides
-        # if self.isClassifierLayer:
-        #     self.deltas = (next_derivatives - self.outp) * self.outp * \
-        #                   (1 - self.outp)
-        # else:
-        #     self.deltas = self.outp * (1 - self.outp) * \
-        #                   np.dot(next_derivatives, next_weights)
+        '''
+        if self.isClassifierLayer:
+            self.deltas = (next_derivatives - self.outp) * self.outp * \
+                           (1. - self.outp)
+
+        else:
+            self.deltas = self.outp * (1. - self.outp) * \
+                          np.dot(next_derivatives, next_weights)
+        '''
         # Or you can have two computeDerivative methods, feel free to call
         # the other is computeOutputLayerDerivative or such.
         return self.deltas

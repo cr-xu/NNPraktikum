@@ -1,6 +1,6 @@
 
 import numpy as np
-
+from sklearn.utils import shuffle
 #from util.loss_functions import CrossEntropyError
 from util.loss_functions import *
 from model.logistic_layer import LogisticLayer
@@ -61,7 +61,7 @@ class MultilayerPerceptron(Classifier):
             self.loss = DifferentError()
         elif loss == 'absolute':
             self.loss = AbsoluteError()
-        elif loss == 'crossentropy':
+        elif loss == 'ce':
             self.loss = CrossEntropyError()
         else:
             raise ValueError('There is no predefined loss function ' +
@@ -79,12 +79,16 @@ class MultilayerPerceptron(Classifier):
         # Input layer
         inputActivation = "sigmoid"
         self.layers.append(LogisticLayer(train.input.shape[1], 128,
-                           None, inputActivation, False))
+                           None, activation=inputActivation, isClassifierLayer=False))
+        # Hidden layer
+        hiddenActivation = "sigmoid"
+        self.layers.append(LogisticLayer(128, 32,
+                           None, activation=hiddenActivation, isClassifierLayer=False))
 
         # Output layer
         outputActivation = "softmax"
-        self.layers.append(LogisticLayer(128, 10,
-                           None, outputActivation, True))
+        self.layers.append(LogisticLayer(32, 10,
+                           None, activation=outputActivation, isClassifierLayer=True))
 
         self.inputWeights = inputWeights
 
@@ -105,7 +109,7 @@ class MultilayerPerceptron(Classifier):
     def _get_output_layer(self):
         return self._get_layer(-1)
 
-    def _feed_forward(self, inp):
+    def _feed_forward(self, inp, debug = False):
         """
         Do feed forward through the layers of the network
 
@@ -122,6 +126,8 @@ class MultilayerPerceptron(Classifier):
             outp = l.forward(next_inp)
             #add bias term to the input of next layer
             next_inp = np.insert(outp, 0, 1)
+        if debug:
+            print self._get_output_layer().outp
 
     def _compute_error(self, target):
         """
@@ -141,11 +147,9 @@ class MultilayerPerceptron(Classifier):
         """
         Update the weights of the layers by propagating back the error
         """
-        i=0
         for l in self.layers:
-            print i
             l.updateWeights(learningRate)
-            i+=1
+
     def train(self, verbose=True):
         """Train the Multi-layer Perceptrons
 
@@ -164,6 +168,9 @@ class MultilayerPerceptron(Classifier):
             if verbose:
                 accuracy = accuracy_score(self.validationSet.label,
                                           self.evaluate(self.validationSet))
+                #testacc = accuracy_score(self.testSet.label,
+                #          self.evaluate(self.testSet))
+                #print testacc*100
                 # Record the performance of each epoch for later usages
                 # e.g. plotting, reporting..
                 self.performances.append(accuracy)
@@ -175,6 +182,8 @@ class MultilayerPerceptron(Classifier):
         """
         Train one epoch, seeing all input instances
         """
+        #shuffle the data
+        self.trainingSet.input, self.trainingSet.label = shuffle(self.trainingSet.input, self.trainingSet.label)
 
         for img, label in zip(self.trainingSet.input,
                                   self.trainingSet.label):
@@ -183,38 +192,31 @@ class MultilayerPerceptron(Classifier):
             # Feed it with inputs
 
             # Do a forward pass to calculate the output and the error
-            self._feed_forward(img)
+            self._feed_forward(img, debug = False)
             # map label to one-hot vector
             label_v = np.zeros(10)
-            label_v[label] = 1
-            self._compute_error(label_v)
+            label_v[label] = 1.
+            error = self._compute_error(label_v)
             # Compute the derivatives w.r.t to the error
             output_layer = self._get_output_layer()
-            output =  output_layer.outp
+            output = output_layer.outp
+            #output =  np.argmax(output_layer.outp)
             next_der = self.loss.calculateDerivative(label_v,output)
             next_w = 1.0
             for layer in reversed(self.layers):
                  next_der = layer.computeDerivative(next_der, next_w)
-                 print np.shape(next_der)
                  next_w = layer.weights[1:,:].T
-                 print np.shape(next_w)
-            #self.layer.computeDerivative(self.loss.calculateDerivative(
-            #                                 label,self.layer.outp), 1.0)
-
-            # Update weights in the online learning fashion
-            print np.shape(self.layers[0].deltas)
-            print np.shape(self.layers[0].weights)
-            print np.shape(self.layers[1].deltas)
-            print np.shape(self.layers[1].weights)
+            # do stochastic gradient descent
             self._update_weights(self.learningRate)
+
 
     def classify(self, test_instance):
         # Classify an instance given the model of the classifier
         # You need to implement something here
         # return the classified class
-        outp = self._feed_forward(test_instance)
+        self._feed_forward(test_instance,debug = False)
+        outp = self._get_output_layer().outp
         return np.argmax(outp)
-
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.

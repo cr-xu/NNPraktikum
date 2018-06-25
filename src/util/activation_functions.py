@@ -29,8 +29,8 @@ class Activation:
     @staticmethod
     def sigmoidPrime(netOutput):
         # Here you have to code the derivative of sigmoid function
-        # netOutput.*(1-netOutput)
-        return netOutput * (1.0 - netOutput)
+        return netOutput *(1.0-netOutput)
+        #return diag(netOutput * (1.0 - netOutput))
 
     @staticmethod
     def tanh(netOutput):
@@ -71,10 +71,7 @@ class Activation:
     @staticmethod
     def softmaxPrime(netOutput):
         # Here you have to code the softmax function
-        # softmax prime[i,j] = (delta_ij-y_i) * y_j
-        s = Activation.softmax(netOutput).reshape((-1,1))
-        jacobian = diag(s) - dot(s, s.T)
-        return jacobian
+        return netOutput *(1.0-netOutput)
 
     @staticmethod
     def getActivation(str):
